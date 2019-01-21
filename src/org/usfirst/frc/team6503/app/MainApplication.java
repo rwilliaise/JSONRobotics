@@ -99,6 +99,14 @@ public class MainApplication extends JFrame {
 		}
 	}
 
+	// import edu.wpi.first.wpilibj.IterativeRobot;
+	// import edu.wpi.first.wpilibj.Joystick;
+	// import edu.wpi.first.wpilibj.CameraServer;
+	// import edu.wpi.first.wpilibj.Spark;
+	// import edu.wpi.first.wpilibj.XboxController;
+	// import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+	// import edu.wpi.first.wpilibj.GenericHID;
+
 	public void generate(JSONRobot robot) throws FileNotFoundException {
 		if (robot == null) {
 			JOptionPane.showMessageDialog(this, "No file has been created.");
@@ -112,7 +120,9 @@ public class MainApplication extends JFrame {
 		writer.println("import edu.wpi.first.wpilibj.Joystick;");
 		writer.println("import edu.wpi.first.wpilibj.CameraServer;");
 		writer.println("import edu.wpi.first.wpilibj.Spark;");
+		writer.println("import edu.wpi.first.wpilibj.XboxController;");
 		writer.println("import edu.wpi.first.wpilibj.drive.DifferentialDrive;");
+		writer.println("import edu.wpi.first.wpilibj.GenericHID;");
 		writer.println();
 		writer.println("import edu.wpi.cscore.UsbCamera;");
 		writer.println();
@@ -148,7 +158,7 @@ public class MainApplication extends JFrame {
 		if (robot.diffdrive != null
 				&& (robot.diffdrive.sparks.get(0) != null && robot.diffdrive.sparks.get(1) != null)) {
 			writer.println("\t\t// Initialize DifferentialDrive");
-			writer.println(String.format("\t\tdiffdrive = new DifferentialDrive(new Spark(%s), new Spark(%s))",
+			writer.println(String.format("\t\tdiffdrive = new DifferentialDrive(new Spark(%s), new Spark(%s));",
 					robot.diffdrive.sparks.get(0).port, robot.diffdrive.sparks.get(1).port));
 		}
 		writer.println("\t}");
@@ -181,7 +191,7 @@ public class MainApplication extends JFrame {
 			String name;
 			if (!map.containsKey(peripheral.name)) {
 				map.put(peripheral.name, 1);
-				name = peripheral.name + "1";
+				name = peripheral.name;
 			} else {
 				name = peripheral.name + map.get(peripheral.name);
 				map.put(peripheral.name, map.get(peripheral.name) + 1);
