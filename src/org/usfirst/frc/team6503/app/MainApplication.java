@@ -44,8 +44,7 @@ public class MainApplication extends JFrame {
 	private JPanel contentPane;
 
 	// Defaults
-	private static final File DESTINATION = new File(
-			"C:/JSONRobot/" + LocalDate.now().toString() + "/export/Robot.json");
+	private static final File DESTINATION = new File("C:/JSONRobot/" + LocalDate.now().toString() + "/export");
 	private static final File SAVE_DESTINATION = new File("C:/JSONRobot/" + LocalDate.now().toString() + "/Robot.json");
 
 	// private static final String MATCHES =
@@ -140,7 +139,8 @@ public class MainApplication extends JFrame {
 		scrollPane.setViewportView(editorPane);
 		((AbstractDocument) editorPane.getDocument())
 				.setDocumentFilter(new StylizedDocumentFilter(editorPane, DefaultStyleFilter.getInstance()));
-		editorPane.setText("{\r\n\r\n}");
+		editorPane.setText(
+				"{\r\n\t\"joysticks\":[],\r\n\t\"controllers\":[],\r\n\t\"gyros\":[],\r\n\tdiffdrive:{motors:{}},\r\n\tcamera:{},\r\n\tautonomous:{init:[],periodic:[]},\r\n\tteleOperated:{init:[],periodic:[]}\r\n}");
 		mntmGenerate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
