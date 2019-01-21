@@ -1,6 +1,7 @@
 package org.usfirst.frc.team6503.app;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,11 +9,16 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -23,6 +29,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.AbstractDocument;
 
 import org.usfirst.frc.team6503.app.JSONRobotReader.JSONPeripheral;
@@ -36,8 +43,10 @@ public class MainApplication extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 
-	private static final File DESTINATION = new File("C:/JSONRobot/current/export");
-	private static final File SAVE_DESTINATION = new File("C:/JSONRobot/current");
+	// Defaults
+	private static final File DESTINATION = new File(
+			"C:/JSONRobot/" + LocalDate.now().toString() + "/export/Robot.json");
+	private static final File SAVE_DESTINATION = new File("C:/JSONRobot/" + LocalDate.now().toString() + "/Robot.json");
 
 	// private static final String MATCHES =
 	// "(\\W)*(joysticks|controllers|gyros|camera|port|name|[{}]|\\d)";
@@ -47,6 +56,7 @@ public class MainApplication extends JFrame {
 	 */
 	public static void main(String[] args) {
 		DESTINATION.getParentFile().mkdirs();
+		SAVE_DESTINATION.getParentFile().mkdirs();
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -85,6 +95,39 @@ public class MainApplication extends JFrame {
 		JMenuItem mntmGenerate = new JMenuItem("Generate");
 		mntmGenerate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0));
 		mnFile.add(mntmGenerate);
+
+		JMenu mnHelp = new JMenu("Help");
+		menuBar.add(mnHelp);
+
+		JMenuItem mntmWiki = new JMenuItem("Wiki");
+		mntmWiki.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					Desktop.getDesktop().browse(new URI("https://github.com/rajawilliams/JSONRobotics/wiki"));
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		JMenuItem mntmGithub = new JMenuItem("Github");
+		mntmGithub.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					Desktop.getDesktop().browse(new URI("https://github.com/rajawilliams/JSONRobotics"));
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		mnHelp.add(mntmGithub);
+		mnHelp.add(mntmWiki);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -97,6 +140,7 @@ public class MainApplication extends JFrame {
 		scrollPane.setViewportView(editorPane);
 		((AbstractDocument) editorPane.getDocument())
 				.setDocumentFilter(new StylizedDocumentFilter(editorPane, DefaultStyleFilter.getInstance()));
+		editorPane.setText("{\r\n\r\n}");
 		mntmGenerate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -151,25 +195,42 @@ public class MainApplication extends JFrame {
 	// import edu.wpi.first.wpilibj.GenericHID;
 
 	public void load(JTextPane editorPane) throws FileNotFoundException {
-		File importe = new File(SAVE_DESTINATION.getPath() + "/Robot.json");
-		Scanner scanner = new Scanner(importe);
-		StringBuilder builder = new StringBuilder();
-		while (scanner.hasNextLine()) {
-			String str = scanner.nextLine();
-			builder.append(str + "\n");
-			System.out.println(str);
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(SAVE_DESTINATION.getParentFile());
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("JSON files", "json");
+		chooser.setFileFilter(filter);
+		int returnVal = chooser.showOpenDialog(this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File importe = chooser.getSelectedFile();
+			Scanner scanner = new Scanner(importe);
+			StringBuilder builder = new StringBuilder();
+			while (scanner.hasNextLine()) {
+				String str = scanner.nextLine();
+				builder.append(str + "\n");
+				System.out.println(str);
+			}
+			scanner.close();
+			editorPane.setText(builder.toString());
 		}
-		scanner.close();
-		editorPane.setText(builder.toString());
 	}
 
 	public void save(String text) throws FileNotFoundException {
-		File export = new File(SAVE_DESTINATION.getPath() + "/Robot.json");
-		PrintWriter writer = new PrintWriter(export);
-		writer.write(text);
-		writer.flush();
-		writer.close();
-		JOptionPane.showMessageDialog(this, "Saved Robot.json at " + export.getAbsolutePath());
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(SAVE_DESTINATION.getParentFile());
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int returnVal = chooser.showOpenDialog(this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			String name = JOptionPane.showInputDialog("What is the name of the file?");
+			if (name != null) {
+				name = name.replaceAll(".json", "");
+				File dest = new File(chooser.getSelectedFile().getPath() + "/" + name + ".json");
+				PrintWriter writer = new PrintWriter(dest);
+				writer.write(text);
+				writer.flush();
+				writer.close();
+				JOptionPane.showMessageDialog(this, "Saved " + name + ".json at " + dest.getAbsolutePath());
+			}
+		}
 	}
 
 	public void generate(JSONRobot robot) throws FileNotFoundException {
