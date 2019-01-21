@@ -41,7 +41,14 @@ public class JSONRobotReader {
 
 	public static class JSONDiffDrive {
 
-		public ArrayList<JSONPeripheral> sparks = new ArrayList<>();
+		public JSONMotorGroup motors = new JSONMotorGroup();
+	}
+
+	public static class JSONMotorGroup {
+		public JSONPeripheral spark1;
+		public JSONPeripheral spark2;
+		public JSONPeripheral victor1;
+		public JSONPeripheral victor2;
 	}
 
 	public static class JSONPeriod {

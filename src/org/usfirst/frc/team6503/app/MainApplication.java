@@ -2,22 +2,26 @@ package org.usfirst.frc.team6503.app;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
-import javax.swing.UIManager;
+import javax.swing.KeyStroke;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.AbstractDocument;
 
@@ -33,6 +37,7 @@ public class MainApplication extends JFrame {
 	private JPanel contentPane;
 
 	private static final File DESTINATION = new File("C:/JSONRobot/current/export");
+	private static final File SAVE_DESTINATION = new File("C:/JSONRobot/current");
 
 	// private static final String MATCHES =
 	// "(\\W)*(joysticks|controllers|gyros|camera|port|name|[{}]|\\d)";
@@ -47,7 +52,7 @@ public class MainApplication extends JFrame {
 			public void run() {
 				try {
 					MainApplication frame = new MainApplication();
-					UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					// UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -63,17 +68,27 @@ public class MainApplication extends JFrame {
 		setTitle("JSONRobot");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
+
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+
+		JMenu mnFile = new JMenu("File");
+		menuBar.add(mnFile);
+
+		JMenuItem mntmSave = new JMenuItem("Save");
+		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+		mnFile.add(mntmSave);
+
+		JMenuItem mntmLoad = new JMenuItem("Load");
+		mnFile.add(mntmLoad);
+
+		JMenuItem mntmGenerate = new JMenuItem("Generate");
+		mntmGenerate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0));
+		mnFile.add(mntmGenerate);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
-
-		JPanel panel = new JPanel();
-		contentPane.add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new GridLayout(1, 0, 0, 0));
-
-		JButton btnUpload = new JButton("Generate");
-		panel.add(btnUpload);
 
 		JScrollPane scrollPane = new JScrollPane();
 		contentPane.add(scrollPane, BorderLayout.CENTER);
@@ -82,12 +97,40 @@ public class MainApplication extends JFrame {
 		scrollPane.setViewportView(editorPane);
 		((AbstractDocument) editorPane.getDocument())
 				.setDocumentFilter(new StylizedDocumentFilter(editorPane, DefaultStyleFilter.getInstance()));
-		btnUpload.addActionListener(new ActionListener() {
+		mntmGenerate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				process(editorPane.getText());
 			}
 		});
+		mntmSave.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				processSave(editorPane.getText());
+			}
+		});
+		mntmLoad.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				processLoad(editorPane);
+			}
+		});
+	}
+
+	public void processLoad(JTextPane editorPane) {
+		try {
+			load(editorPane);
+		} catch (FileNotFoundException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
+	}
+
+	public void processSave(String text) {
+		try {
+			save(text);
+		} catch (FileNotFoundException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
 	}
 
 	public void process(String text) {
@@ -106,6 +149,28 @@ public class MainApplication extends JFrame {
 	// import edu.wpi.first.wpilibj.XboxController;
 	// import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 	// import edu.wpi.first.wpilibj.GenericHID;
+
+	public void load(JTextPane editorPane) throws FileNotFoundException {
+		File importe = new File(SAVE_DESTINATION.getPath() + "/Robot.json");
+		Scanner scanner = new Scanner(importe);
+		StringBuilder builder = new StringBuilder();
+		while (scanner.hasNextLine()) {
+			String str = scanner.nextLine();
+			builder.append(str + "\n");
+			System.out.println(str);
+		}
+		scanner.close();
+		editorPane.setText(builder.toString());
+	}
+
+	public void save(String text) throws FileNotFoundException {
+		File export = new File(SAVE_DESTINATION.getPath() + "/Robot.json");
+		PrintWriter writer = new PrintWriter(export);
+		writer.write(text);
+		writer.flush();
+		writer.close();
+		JOptionPane.showMessageDialog(this, "Saved Robot.json at " + export.getAbsolutePath());
+	}
 
 	public void generate(JSONRobot robot) throws FileNotFoundException {
 		if (robot == null) {
@@ -155,11 +220,30 @@ public class MainApplication extends JFrame {
 			writer.println(String.format("\t\tcamera.setResolution(%s, %s);", robot.camera.resx, robot.camera.resy));
 			writer.println();
 		}
-		if (robot.diffdrive != null
-				&& (robot.diffdrive.sparks.get(0) != null && robot.diffdrive.sparks.get(1) != null)) {
-			writer.println("\t\t// Initialize DifferentialDrive");
-			writer.println(String.format("\t\tdiffdrive = new DifferentialDrive(new Spark(%s), new Spark(%s));",
-					robot.diffdrive.sparks.get(0).port, robot.diffdrive.sparks.get(1).port));
+		if (robot.diffdrive != null) {
+			final String spark = "Spark";
+			final String victor = "Victor";
+			JSONPeripheral motor1 = null;
+			String type1 = spark;
+			JSONPeripheral motor2 = null;
+			String type2 = spark;
+			if (robot.diffdrive.motors.spark1 != null) {
+				motor1 = robot.diffdrive.motors.spark1;
+			} else if (robot.diffdrive.motors.victor1 != null) {
+				motor1 = robot.diffdrive.motors.victor1;
+				type1 = victor;
+			}
+			if (robot.diffdrive.motors.spark2 != null) {
+				motor2 = robot.diffdrive.motors.spark2;
+			} else if (robot.diffdrive.motors.victor2 != null) {
+				motor2 = robot.diffdrive.motors.victor2;
+				type2 = victor;
+			}
+			if (motor1 != null && motor2 != null) {
+				writer.println("\t\t// Initialize DifferentialDrive");
+				writer.println(String.format("\t\tdiffdrive = new DifferentialDrive(new %s(%s), new %s(%s));", type1,
+						motor1.port, type2, motor2.port));
+			}
 		}
 		writer.println("\t}");
 		putPeriods(robot, writer);

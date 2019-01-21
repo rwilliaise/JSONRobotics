@@ -7,7 +7,7 @@ An example of working JSON:
 ```
 {
 	controllers:[{port:0,name:"controller"}],
-	diffdrive:{sparks:[{port:0},{port:1}]},
+	diffdrive:{motors:{spark1:{port:0},spark2:{port:1}}},
 	camera:{},
 	teleOperated:{periodic:["diffDrive.tankDrive(controller.getX(GeneralHID.Hand.kLeft),controller.getY(GeneralHID.Hand.kLeft));"]}
 }
