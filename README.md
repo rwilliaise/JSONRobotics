@@ -4,7 +4,7 @@ Made with the purpose of generating iterative robots with JSON.
 ## Example
 
 An example of working JSON:
-```
+```json
 {
 	controllers:[{port:0,name:"controller"}],
 	diffdrive:{motors:{spark1:{port:0},spark2:{port:1}}},
@@ -14,7 +14,7 @@ An example of working JSON:
 ```
 
 This should output into
-```
+```java
 package org.usfirst.frc.team6503.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
