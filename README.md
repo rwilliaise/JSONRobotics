@@ -32,8 +32,8 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void robotInit() {
 
-		// Initalize XboxController controller1
-		controller1 = new XboxController(0);
+		// Initalize XboxController controller
+		controller = new XboxController(0);
 
 		// Initialize camera and set resolution to 640 by 480
 		UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
